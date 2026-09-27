@@ -1,2 +1,1 @@
-# ln-theme
-theme
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis a eros tristique, sodales elit in, aliquam mauris. Nam nibh diam, accumsan at tincidunt ac, commodo ut arcu. Integer nec dolor consectetur, sollicitudin elit quis, convallis nulla.
