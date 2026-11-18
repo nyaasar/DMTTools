@@ -492,6 +492,22 @@ textarea{
 	color:#d32f2f
 }
 
+.btnRemoveImg{
+	display:none;
+	margin-top:6px;
+	padding:6px 12px;
+	font-size:12px
+}
+
+.btnImport{
+	background:#e8eaf6;
+	color:#283593;
+	width:100%;
+	padding:12px;
+	font-size:14px;
+	margin-top:8px
+}
+
 .btnPreview{
 	background:#455a64;
 	color:#fff;
@@ -555,7 +571,7 @@ textarea{
 }
 
 .uploadPreview{
-	max-width:220px;
+	max-width:100%;
 	max-height:100px;
 	display:none;
 	margin-top:6px;
@@ -566,7 +582,7 @@ textarea{
 }
 
 .stampPreview{
-	max-width:180px;
+	max-width:100%;
 	max-height:90px;
 	display:none;
 	margin-top:6px;
@@ -589,38 +605,57 @@ textarea{
 	     LOGO
 	========================= -->
 
-	<label>Upload Logo PNG</label>
-	<labeldesc>Supported formats are JPG, PNG, WebP, & SVG.</labeldesc>
+	<div class="grid2">
 
-	<input
-		type="file"
-		id="logoInput"
-		accept="image/jpeg,image/png,image/webp,image/svg+xml"
-	>
+		<div>
+			<label>Upload Logo PNG</label>
+			<labeldesc>JPG, PNG, WebP, & SVG.</labeldesc>
 
-	<img
-		id="logoPrev"
-		class="uploadPreview"
-	>
+			<input
+				type="file"
+				id="logoInput"
+				accept="image/jpeg,image/png,image/webp,image/svg+xml"
+			>
 
+			<img
+				id="logoPrev"
+				class="uploadPreview"
+			>
 
-	<!-- =========================
-	     DIGITAL STAMP
-	========================= -->
+			<button
+				class="btn btnDel btnRemoveImg"
+				type="button"
+				id="logoRemove"
+			>
+				Remove
+			</button>
+		</div>
 
-	<label>Upload Digital Stamp PNG</label>
-	<labeldesc>Supported formats are PNG, WebP, & SVG.</labeldesc>
+		<div>
+			<label>Upload Digital Stamp PNG</label>
+			<labeldesc>PNG, WebP, & SVG.</labeldesc>
 
-	<input
-		type="file"
-		id="stampInput"
-		accept="image/png,image/webp,image/svg+xml"
-	>
+			<input
+				type="file"
+				id="stampInput"
+				accept="image/png,image/webp,image/svg+xml"
+			>
 
-	<img
-		id="stampPrev"
-		class="stampPreview"
-	>
+			<img
+				id="stampPrev"
+				class="stampPreview"
+			>
+
+			<button
+				class="btn btnDel btnRemoveImg"
+				type="button"
+				id="stampRemove"
+			>
+				Remove
+			</button>
+		</div>
+
+	</div>
 
 
 	<!-- =========================
@@ -677,18 +712,30 @@ textarea{
 	     BILL TO
 	========================= -->
 
+	<label>FROM</label>
+	<labeldesc>Satu baris per baris di PDF (nama usaha, alamat, telepon, email).</labeldesc>
+
+	<textarea id="fromInfo" rows="4">Delta Multi Teknik - CCTV, Networking & Air Conditioner Solution
+Jl. Wortel No.7 Tanggulangin, Sidoarjo
+0857-0260-7096
+admin@deltamulticctv.com</textarea>
+
+
 	<label>BILL TO</label>
 
 	<input
 		id="billName"
-		value="Pak Nandar"
+		placeholder="Nama"
 	>
 
-	<textarea id="billAddr">Villa Jasmine 3 blok B6/01, Kec.Suko</textarea>
+	<textarea
+		id="billAddr"
+		placeholder="Alamat"
+	></textarea>
 
 	<input
 		id="billPhone"
-		value="+6281357596317"
+		placeholder="Nomor Telepon"
 	>
 
 
@@ -710,6 +757,12 @@ textarea{
 	<!-- =========================
 	     TERMS
 	========================= -->
+
+	<label>Signature Name (below Hormat Kami)</label>
+
+	<textarea id="signText" rows="2">DELTA MULTI TEKNIK
+SIDOARJO</textarea>
+
 
 	<label>Terms</label>
 
@@ -737,6 +790,22 @@ textarea{
 	>
 		📄 Generate PDF
 	</button>
+
+
+	<button
+		class="btn btnImport"
+		type="button"
+		id="btnImport"
+	>
+		📥 Import data from PDF
+	</button>
+
+	<input
+		type="file"
+		id="pdfImportInput"
+		accept="application/pdf"
+		style="display:none"
+	>
 
 
 	<!-- =========================
@@ -774,6 +843,8 @@ textarea{
 <script>
 
 const KEY='dmt_final_sejajar_v6';
+
+const PDF_DATA_TAG='DMTINV1:';
 
 let logoDataUrl=null;
 
@@ -824,6 +895,8 @@ function saveAll(){
 		billName:billName.value,
 		billAddr:billAddr.value,
 		billPhone:billPhone.value,
+		fromInfo:fromInfo.value,
+		signText:signText.value,
 		terms:terms.value,
 		items:items,
 		logo:logoDataUrl,
@@ -890,6 +963,14 @@ function loadAll(){
 
 		billPhone.value=
 			d.billPhone||billPhone.value;
+
+
+		fromInfo.value=
+			d.fromInfo||fromInfo.value;
+
+
+		signText.value=
+			d.signText||signText.value;
 
 
 		terms.value=
@@ -1011,6 +1092,8 @@ logoInput.addEventListener(
 				logoPrev.style.display=
 					'block';
 
+				updateImageUI();
+
 				saveAll();
 
 			};
@@ -1060,6 +1143,7 @@ stampInput.addEventListener(
 				stampPrev.style.display=
 					'block';
 
+				updateImageUI();
 
 				saveAll();
 
@@ -1067,6 +1151,63 @@ stampInput.addEventListener(
 
 
 		r.readAsDataURL(f);
+
+	}
+);
+
+
+/* =========================
+   REMOVE UPLOADED IMAGES
+========================= */
+
+function updateImageUI(){
+
+	logoPrev.style.display=
+		logoDataUrl?'block':'none';
+
+	logoRemove.style.display=
+		logoDataUrl?'inline-block':'none';
+
+	stampPrev.style.display=
+		stampDataUrl?'block':'none';
+
+	stampRemove.style.display=
+		stampDataUrl?'inline-block':'none';
+
+}
+
+logoRemove.addEventListener(
+	'click',
+	()=>{
+
+		logoDataUrl=null;
+
+		logoPrev.removeAttribute('src');
+
+		logoInput.value='';
+
+		updateImageUI();
+
+		saveAll();
+
+	}
+);
+
+stampRemove.addEventListener(
+	'click',
+	()=>{
+
+		stampDataUrl=null;
+
+		stampRotation=null;
+
+		stampPrev.removeAttribute('src');
+
+		stampInput.value='';
+
+		updateImageUI();
+
+		saveAll();
 
 	}
 );
@@ -1387,21 +1528,39 @@ function createPDF(){
 	let fy=110;
 
 
-	[
-		'Delta Multi Teknik - CCTV, Networking & Air Conditioner Solution',
-		'Jl. Wortel No.7 Tanggulangin, Sidoarjo',
-		'0857-0260-7096',
-		'admin@deltamulticctv.com'
-	].forEach(
+	/*
+	 * Each non-empty line is wrapped so it stops
+	 * before the BILL TO column (starts at W-180).
+	 */
+
+	const fromWidth=
+		(W-180)-32-15;
+
+	fromInfo.value
+		.split('\n')
+		.map(l=>l.trim())
+		.filter(l=>l)
+		.forEach(
 		l=>{
 
-			doc.text(
-				l,
-				32,
-				fy
-			);
+			doc
+				.splitTextToSize(
+					l,
+					fromWidth
+				)
+				.forEach(
+					part=>{
 
-			fy+=12;
+						doc.text(
+							part,
+							32,
+							fy
+						);
+
+						fy+=12;
+
+					}
+				);
 
 		}
 	);
@@ -1504,7 +1663,16 @@ function createPDF(){
 	   NO INTERNAL LINES
 	========================= */
 
-	const tableStartY=155;
+	/*
+	 * Push the table down if FROM or BILL TO
+	 * became taller than the default layout.
+	 */
+
+	const tableStartY=
+		Math.max(
+			155,
+			Math.max(fy-12,by)+9
+		);
 
 
 	doc.autoTable({
@@ -1548,7 +1716,9 @@ function createPDF(){
 
 		headStyles:{
 			fontStyle:'bold',
-			lineWidth:0
+			lineWidth:0,
+			fillColor:[225,225,225],
+			textColor:[0,0,0]
 		},
 
 
@@ -1559,7 +1729,9 @@ function createPDF(){
 
 		footStyles:{
 			fontStyle:'bold',
-			lineWidth:0
+			lineWidth:0,
+			fillColor:[225,225,225],
+			textColor:[0,0,0]
 		},
 
 
@@ -1931,24 +2103,24 @@ function createPDF(){
 	);
 
 
-	doc.text(
-		'DELTA MULTI TEKNIK',
-		W-130,
-		signY+20,
-		{
-			align:'center'
-		}
-	);
+	signText.value
+		.split('\n')
+		.map(l=>l.trim())
+		.filter(l=>l)
+		.forEach(
+			(l,i)=>{
 
+				doc.text(
+					l,
+					W-130,
+					signY+20+i*12,
+					{
+						align:'center'
+					}
+				);
 
-	doc.text(
-		'SIDOARJO',
-		W-130,
-		signY+32,
-		{
-			align:'center'
-		}
-	);
+			}
+		);
 
 
 	doc.setTextColor(
@@ -1956,6 +2128,19 @@ function createPDF(){
 		0,
 		0
 	);
+
+
+	/* =========================
+	   EMBED INVOICE DATA
+	   (so the PDF can be imported back)
+	========================= */
+
+	doc.setProperties({
+		title:invNo.value||'Invoice',
+		keywords:
+			PDF_DATA_TAG+
+			encodeInvoiceData()
+	});
 
 
 	return doc;
@@ -2115,6 +2300,8 @@ document
 
 loadAll();
 
+updateImageUI();
+
 renderItems();
 
 
@@ -2126,6 +2313,8 @@ renderItems();
 	'billName',
 	'billAddr',
 	'billPhone',
+	'fromInfo',
+	'signText',
 	'terms'
 ].forEach(
 	id=>{
@@ -2136,6 +2325,802 @@ renderItems();
 				'input',
 				saveAll
 			);
+
+	}
+);
+
+
+/* =========================
+   PDF DATA EXPORT / IMPORT
+========================= */
+
+function collectInvoiceData(){
+
+	return{
+		invNo:invNo.value,
+		creatDate:creatDate.value,
+		dueDate:dueDate.value,
+		payMethod:payMethod.value,
+		billName:billName.value,
+		billAddr:billAddr.value,
+		billPhone:billPhone.value,
+		fromInfo:fromInfo.value,
+		signText:signText.value,
+		terms:terms.value,
+		items:items,
+		stampRotation:stampRotation
+	};
+
+}
+
+function encodeInvoiceData(){
+
+	return btoa(
+		unescape(
+			encodeURIComponent(
+				JSON.stringify(
+					collectInvoiceData()
+				)
+			)
+		)
+	);
+
+}
+
+function decodeInvoiceData(b64){
+
+	return JSON.parse(
+		decodeURIComponent(
+			escape(
+				atob(b64)
+			)
+		)
+	);
+
+}
+
+function applyInvoiceData(d){
+
+	['invNo','creatDate','dueDate','payMethod',
+	 'billName','billAddr','billPhone',
+	 'fromInfo','signText','terms'].forEach(
+		id=>{
+
+			if(typeof d[id]==='string'){
+
+				document
+					.getElementById(id)
+					.value=d[id];
+
+			}
+
+		}
+	);
+
+	if(Array.isArray(d.items)){
+
+		items=d.items.map(
+			it=>({
+				desc:String(it.desc||''),
+				qty:Number(it.qty)||0,
+				price:Number(it.price)||0
+			})
+		);
+
+		renderItems();
+
+	}
+
+	if(typeof d.stampRotation==='number'){
+
+		stampRotation=
+			d.stampRotation;
+
+	}
+
+	saveAll();
+
+}
+
+document
+	.getElementById('btnImport')
+	.addEventListener(
+		'click',
+		()=>{
+
+			pdfImportInput.click();
+
+		}
+	);
+
+/* PDF PARSER START */
+
+/*
+ * Reading invoices from PDFs that were made by
+ * this tool but do not carry embedded data
+ * (older versions). The text is read straight
+ * from the PDF drawing commands, then mapped
+ * back to the form fields by position/order.
+ */
+
+function pdfLatin1(u8){
+
+	let t='';
+
+	for(let i=0;i<u8.length;i+=8192){
+
+		t+=String.fromCharCode.apply(
+			null,
+			u8.subarray(i,i+8192)
+		);
+
+	}
+
+	return t;
+
+}
+
+async function pdfInflate(u8){
+
+	const ds=
+		new DecompressionStream('deflate');
+
+	const w=ds.writable.getWriter();
+
+	w.write(u8);
+
+	w.close();
+
+	return new Uint8Array(
+		await new Response(ds.readable)
+			.arrayBuffer()
+	);
+
+}
+
+async function pdfContentStreams(bytes,txt){
+
+	const out=[];
+
+	const re=/stream\r?\n/g;
+
+	let m;
+
+	while((m=re.exec(txt))){
+
+		const start=
+			m.index+m[0].length;
+
+		const end=
+			txt.indexOf('endstream',start);
+
+		if(end<0)break;
+
+		re.lastIndex=end+9;
+
+		const dict=
+			txt.slice(
+				txt.lastIndexOf('obj',m.index),
+				m.index
+			);
+
+		if(/\/Subtype\s*\/Image/.test(dict))
+			continue;
+
+		let data=
+			bytes.subarray(start,end);
+
+		if(/FlateDecode/.test(dict)){
+
+			try{
+
+				data=await pdfInflate(data);
+
+			}catch(e){
+
+				continue;
+
+			}
+
+		}
+
+		const str=pdfLatin1(data);
+
+		if(/(^|\n)BT\n/.test(str))
+			out.push(str);
+
+	}
+
+	return out;
+
+}
+
+function pdfUnescape(str){
+
+	return str.replace(
+		/\\([nrtbf()\\]|[0-7]{1,3}|\r?\n)/g,
+		(m,c)=>{
+
+			if(c==='n')return'\n';
+			if(c==='t')return'\t';
+			if(c==='r'||c==='b'||c==='f')return'';
+			if(/^[0-7]+$/.test(c))
+				return String.fromCharCode(
+					parseInt(c,8)
+				);
+			if(/^\r?\n$/.test(c))return'';
+
+			return c;
+
+		}
+	);
+
+}
+
+function pdfTextItems(streams){
+
+	const items=[];
+
+	streams.forEach(
+		(str,page)=>{
+
+			const re=
+				/(?:^|\n)BT\n([\s\S]*?)\nET(?=\n|$)/g;
+
+			let m;
+
+			while((m=re.exec(str))){
+
+				const b=m[1];
+
+				const td=
+					b.match(
+						/^([-\d.]+) ([-\d.]+) Td$/m
+					);
+
+				if(!td)continue;
+
+				const tf=
+					b.match(
+						/\/(F\d+) ([\d.]+) Tf/
+					);
+
+				const lines=[];
+
+				const tj=
+					/\(((?:\\[\s\S]|[^\\)])*)\)\s*Tj/g;
+
+				let t;
+
+				while((t=tj.exec(b))){
+
+					lines.push(
+						pdfUnescape(t[1])
+					);
+
+				}
+
+				if(!lines.length)continue;
+
+				items.push({
+					page:page,
+					x:parseFloat(td[1]),
+					y:parseFloat(td[2]),
+					size:tf?parseFloat(tf[2]):0,
+					lines:lines
+				});
+
+			}
+
+		}
+	);
+
+	return items;
+
+}
+
+function pdfMoney(str){
+
+	return Number(
+		String(str)
+			.replace(/[^\d,.-]/g,'')
+			.replace(/\./g,'')
+			.replace(',','.')
+	)||0;
+
+}
+
+function pdfDateToIso(str){
+
+	const m=
+		String(str).match(
+			/(\d{2})\/(\d{2})\/(\d{4})/
+		);
+
+	return m
+		?m[3]+'-'+m[2]+'-'+m[1]
+		:'';
+
+}
+
+function parseOldInvoice(items){
+
+	const first=
+		t=>items.findIndex(
+			it=>it.lines[0]===t
+		);
+
+	const iFrom=first('FROM:');
+
+	const iBill=first('BILL TO:');
+
+	const iDesc=first('DESCRIPTION');
+
+	if(iFrom<0||iDesc<0)return null;
+
+	const iPay=first('PAYMENT METHOD');
+
+	const iTerms=first('TERMS & CONDITIONS');
+
+	const iHormat=first('Hormat Kami,');
+
+	const linesBetween=
+		(a,b)=>[].concat(
+			...items
+				.slice(a+1,b<0?items.length:b)
+				.map(it=>it.lines)
+		);
+
+	const d={};
+
+
+	/* HEADER */
+
+	items.slice(0,iFrom).forEach(
+		it=>it.lines.forEach(
+			l=>{
+
+				let m;
+
+				if((m=l.match(/^INVOICE NO\.:\s?(.*)$/)))
+					d.invNo=m[1];
+
+				else if((m=l.match(/^CRE\. DATE:\s?(.*)$/)))
+					d.creatDate=pdfDateToIso(m[1]);
+
+				else if((m=l.match(/^DUE DATE:\s?(.*)$/)))
+					d.dueDate=pdfDateToIso(m[1]);
+
+			}
+		)
+	);
+
+
+	/* FROM */
+
+	d.fromInfo=
+		linesBetween(
+			iFrom,
+			iBill>iFrom?iBill:iDesc
+		).join('\n');
+
+
+	/* BILL TO */
+
+	if(iBill>=0){
+
+		const arr=
+			linesBetween(iBill,iDesc);
+
+		const phoneRe=
+			/^[+\d][\d\s\-+().]{5,}$/;
+
+		let phone='';
+
+		if(
+			arr.length>1&&
+			phoneRe.test(arr[arr.length-1])
+		){
+
+			phone=arr.pop();
+
+		}
+
+		d.billName=arr.shift()||'';
+
+		d.billAddr=arr.join('\n');
+
+		d.billPhone=phone;
+
+	}
+
+
+	/* ITEMS */
+
+	const tableEnd=
+		iPay>=0?iPay:items.length;
+
+	const rows=[];
+
+	items
+		.slice(iDesc,tableEnd)
+		.forEach(
+			it=>{
+
+				const key=
+					it.page+':'+it.y.toFixed(1);
+
+				const last=
+					rows[rows.length-1];
+
+				if(last&&last.key===key){
+
+					last.cells.push(it);
+
+				}else{
+
+					rows.push({
+						key:key,
+						cells:[it]
+					});
+
+				}
+
+			}
+		);
+
+	const parsedItems=[];
+
+	rows.forEach(
+		r=>{
+
+			const c=
+				r.cells.sort(
+					(a,b)=>a.x-b.x
+				);
+
+			const head=c[0].lines[0];
+
+			if(head==='DESCRIPTION')return;
+
+			if(c.some(x=>x.lines[0]==='TOTAL'))
+				return;
+
+			if(c.length<4)return;
+
+			const desc=
+				c[0].lines.join(' ').trim();
+
+			if(!desc)return;
+
+			parsedItems.push({
+				desc:desc,
+				qty:Number(
+					String(c[1].lines[0])
+						.replace(',','.')
+				)||0,
+				price:pdfMoney(c[2].lines[0])
+			});
+
+		}
+	);
+
+	d.items=parsedItems;
+
+
+	/* PAYMENT / TERMS / SIGNATURE */
+
+	if(iPay>=0){
+
+		d.payMethod=
+			linesBetween(
+				iPay,
+				iTerms>iPay?iTerms:iHormat>iPay?iHormat:-1
+			).join('\n');
+
+	}
+
+	if(iTerms>=0){
+
+		d.terms=
+			linesBetween(
+				iTerms,
+				iHormat>iTerms?iHormat:-1
+			).join('\n');
+
+	}
+
+	if(iHormat>=0){
+
+		d.signText=
+			linesBetween(iHormat,-1)
+				.filter(l=>l.trim())
+				.join('\n');
+
+	}
+
+	return d;
+
+}
+
+/*
+ * Images: JPEG pictures are stored untouched in
+ * the PDF, so the logo / stamp can be recovered.
+ * (Other image encodings cannot be restored.)
+ */
+
+function pdfExtractImages(bytes,txt,streams){
+
+	const result={
+		logo:null,
+		stamp:null,
+		stampRotation:null
+	};
+
+	const idMap={};
+
+	txt.replace(
+		/\/I(\d+)\s+(\d+)\s+0\s+R/g,
+		(m,i,o)=>{
+
+			idMap[i]=o;
+
+			return m;
+
+		}
+	);
+
+	const jpegs={};
+
+	const re=/\/Subtype\s*\/Image/g;
+
+	let m;
+
+	while((m=re.exec(txt))){
+
+		const objAt=
+			txt.lastIndexOf('obj',m.index);
+
+		const num=
+			txt.slice(
+				Math.max(0,objAt-12),
+				objAt
+			).match(/(\d+)\s+0\s+$/);
+
+		const sIdx=
+			txt.indexOf('stream',m.index);
+
+		if(!num||sIdx<0)continue;
+
+		const dict=
+			txt.slice(m.index,sIdx);
+
+		if(!/\/Filter\s*\/DCTDecode/.test(dict))
+			continue;
+
+		const len=
+			dict.match(/\/Length\s+(\d+)/);
+
+		let start=sIdx+6;
+
+		if(txt[start]==='\r')start++;
+
+		if(txt[start]==='\n')start++;
+
+		const end=
+			len
+				?start+parseInt(len[1],10)
+				:txt.indexOf('endstream',start);
+
+		const data=
+			bytes.subarray(start,end);
+
+		if(data[0]!==0xFF||data[1]!==0xD8)
+			continue;
+
+		jpegs[num[1]]=
+			'data:image/jpeg;base64,'+
+			btoa(pdfLatin1(data));
+
+	}
+
+	const cmRe=
+		/([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+) cm/g;
+
+	streams.forEach(
+		str=>{
+
+			const doRe=/\/I(\d+) Do/g;
+
+			let d;
+
+			let prevEnd=0;
+
+			while((d=doRe.exec(str))){
+
+				const url=
+					jpegs[idMap[d[1]]];
+
+				const seg=
+					str.slice(prevEnd,d.index);
+
+				prevEnd=d.index;
+
+				if(!url)continue;
+
+				const cms=
+					[...seg.matchAll(cmRe)]
+						.map(x=>x.slice(1,7).map(Number));
+
+				if(!cms.length)continue;
+
+				const scale=
+					cms[cms.length-1];
+
+				if(Math.abs(scale[0])>150){
+
+					result.logo=url;
+
+				}else{
+
+					result.stamp=url;
+
+					if(cms.length>1){
+
+						const r=
+							cms[cms.length-2];
+
+						if(
+							Math.abs(r[0]-r[3])<1e-3&&
+							Math.abs(r[1]+r[2])<1e-3
+						){
+
+							result.stampRotation=
+								Math.round(
+									Math.atan2(r[1],r[0])
+									*180/Math.PI*10
+								)/10;
+
+						}
+
+					}
+
+				}
+
+			}
+
+		}
+	);
+
+	return result;
+
+}
+
+/* PDF PARSER END */
+
+pdfImportInput.addEventListener(
+	'change',
+	async e=>{
+
+		const f=
+			e.target.files[0];
+
+		if(!f)return;
+
+		try{
+
+			const bytes=
+				new Uint8Array(
+					await f.arrayBuffer()
+				);
+
+			const txt=
+				pdfLatin1(bytes);
+
+			const streams=
+				await pdfContentStreams(
+					bytes,
+					txt
+				);
+
+			let data=null;
+
+			let how='';
+
+			/* 1. data embedded by newer versions */
+
+			const m=
+				txt.match(
+					new RegExp(
+						PDF_DATA_TAG+
+						'([A-Za-z0-9+/=]+)'
+					)
+				);
+
+			if(m){
+
+				try{
+
+					data=
+						decodeInvoiceData(m[1]);
+
+					how='embedded data';
+
+				}catch(err){}
+
+			}
+
+			/* 2. read the printed text (older PDFs) */
+
+			if(!data){
+
+				data=
+					parseOldInvoice(
+						pdfTextItems(streams)
+					);
+
+				how='PDF text';
+
+			}
+
+			if(!data){
+
+				alert(
+					'Could not recognise an invoice '+
+					'made by this tool in that PDF.'
+				);
+
+				return;
+
+			}
+
+			applyInvoiceData(data);
+
+			/* 3. logo / stamp when stored as JPEG */
+
+			const img=
+				pdfExtractImages(
+					bytes,
+					txt,
+					streams
+				);
+
+			if(img.logo){
+
+				logoDataUrl=img.logo;
+
+				logoPrev.src=img.logo;
+
+			}
+
+			if(img.stamp){
+
+				stampDataUrl=img.stamp;
+
+				stampPrev.src=img.stamp;
+
+				if(img.stampRotation!==null)
+					stampRotation=
+						img.stampRotation;
+
+			}
+
+			updateImageUI();
+
+			saveAll();
+
+			saveInfo.textContent=
+				'Data diimpor dari PDF ('+how+')';
+
+		}catch(err){
+
+			alert(
+				'Could not read data from this PDF.'
+			);
+
+		}
+
+		e.target.value='';
 
 	}
 );
