@@ -2101,13 +2101,14 @@ function createPDF(){
 
 
 			/*
-			 * Put the stamp above
-			 * "Hormat Kami".
+			 * Put the stamp between
+			 * "Hormat Kami" and the
+			 * signature name.
 			 */
 
 			const stampY=
-				signY-
-				50;
+				signY+
+				6;
 
 
 			/*
@@ -2226,7 +2227,7 @@ function createPDF(){
 				doc.text(
 					l,
 					W-130,
-					signY+20+i*12,
+					signY+(stampDataUrl?58:20)+i*12,
 					{
 						align:'center'
 					}
